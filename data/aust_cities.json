@@ -1,0 +1,37 @@
+{
+    "cities":[
+        {
+            "pos": [-33.86, 151.20],
+            "name": "Sydney",
+            "color": "#FFCCCC"
+        },{
+            "pos": [-37.81, 144.96],
+            "name": "Melbourne",
+            "color": "#FFCCCC"
+        },{
+            "pos": [-27.47, 153.02],
+            "name": "Brisbane",
+            "color": "#FFCCCC"
+        },{
+            "pos": [39.9, 116.3],
+            "name": "Peking",
+            "color": "#FFCCCC"
+        },{
+            "pos": [39.9, 116.3],
+            "name": "Peking",
+            "color": "#FFCCCC"
+        },{
+            "pos": [39.9, 116.3],
+            "name": "Peking",
+            "color": "#FFCCCC"
+        },{
+            "pos": [39.9, 116.3],
+            "name": "Peking",
+            "color": "#FFCCCC"
+        },{
+            "pos": [39.9, 116.3],
+            "name": "Peking",
+            "color": "#FFCCCC"
+        }
+    ]
+}
