@@ -62,6 +62,32 @@ var svg = d3.select("#aust_map")
 var map = svg.append("g")
 
 
+var arrowMarker = (layout,id,fill,stroke)=>{
+    arrow = layout.append("marker")
+    .attr("id",id)
+    .attr("markerUnits","strokeWidth")
+    .attr("markerWidth","12")
+    .attr("markerHeight","12")
+    .attr("viewBox","0 0 12 12") 
+    .attr("refX","6")
+    .attr("refY","6")
+    .attr("orient","auto");
+    x = 5
+    // var arrow_path = "M2,2 L10,6 L2,10 L6,6 L2,2";
+    var arrow_path = "M"+x+","+x+
+                    " L"+(8+x)+",6"+
+                    " L"+x+",10"+
+                    " L"+(x+4)+",6"+
+                    " L"+x+","+x
+    arrow.append("path")
+        .attr("d",arrow_path)
+        .attr('stroke-width', 0.7)
+        .attr("stroke", stroke)
+        .attr("fill",fill);
+}
+
+
+
 // load cities data
 cities_pos = new Map()
 load_citeis = () => d3.json("./flight_visual/data/au.json").then( function (json) {
@@ -120,14 +146,78 @@ load_map = () => d3.json("./flight_visual/data/aust.json").then( function (json)
         });
 });
 
+getAngle= (x1,x2,y1,y2)=>{
+    dx = y1-x1
+    dy = y2-x2
+    angle = Math.abs(Math.atan2(dy,dx)*90/Math.PI)
+    if(dx>=0& dy>=0){
+        // console.log("q1 "+dx+","+dy)
+        return angle}
+    else if (dx>=0& dy<=0) { 
+        // console.log("q2 "+dx+","+dy) 
+        return 360 - angle} 
+    else if (dx<=0& dy<=0) { 
+        console.log("q3 "+dx+","+dy+", "+angle) 
+        return 180 + angle} 
+    else {
+        // console.log("q4 "+dx+","+dy+", "+angle) 
+        return 180 - angle}
+}
 
 create_airline=(from_pos, to_pos, from_name, to_name, properties)=>{
-    r = Math.ceil(Math.random()*10)+5;  
-    from_str = 'M'+from_pos[0]+' '+from_pos[1]
-    to_str = ' '+to_pos[0]+' '+to_pos[1]
-    mid_pos = [((from_pos[0]+to_pos[0])/2 +r),((from_pos[1]+to_pos[1])/2 +r)]
-    mid_str = 'Q'+mid_pos[0]+' '+mid_pos[1]
+    
+    var arr_id = "arr_from_"+repSpace(from_name)+'_to_'+repSpace(to_name);
+    arrowMarker(map,
+        arr_id,
+        engine_list.get(properties.engine),
+        aircraft_list.get(properties.aircraft))
+    var from_str = 'M'+from_pos[0]+' '+from_pos[1]
+    // to_str = ' '+to_pos[0]+' '+to_pos[1]
+    // r = Math.ceil(Math.random()*5)+5;  
+    var r = Math.ceil(Math.sqrt(Math.pow(from_pos[0]-to_pos[0],2)+Math.pow(from_pos[1]-to_pos[1],2))/100)
+    var mid_pos = [(((from_pos[0]+to_pos[0])/2) +r),(((from_pos[1]+to_pos[1])/2 )-r)]
+    // mid_str = 'Q'+mid_pos[0]+' '+mid_pos[1]
+    var to_str = 'T'+to_pos[0]+' '+to_pos[1]
+    var mid_str = 'T'+mid_pos[0]+' '+mid_pos[1]
 
+    var quadrant = 0;
+    var angle = getAngle(from_pos[0],from_pos[1],to_pos[0],to_pos[1])
+
+    console.log(arr_id+": "+angle)
+
+    // draw the flight animation 
+    flight = map
+        // .append("circle")
+        .append("path")
+        .attr("d","M2,-4 L10,0 L2,4 L6,0 L2,-4")
+        .classed('airline', true)
+        .classed('from_'+repSpace(from_name), true)
+        .classed('to_'+repSpace(to_name), true)
+        .classed('airspace_'+repSpace(properties.airspace), true)
+        .classed('aircraft_'+repSpace(properties.aircraft), true)
+        .classed('engine_'+repSpace(properties.engine), true)
+        .attr('r',3)
+        .attr('stroke-width', 1)
+        .attr("stroke", aircraft_list.get(properties.aircraft))
+        .attr('fill', engine_list.get(properties.engine))
+        .attr("transform", "translate("+from_pos[0]+","+from_pos[1]+"),rotate("+angle+")")
+        .transition()
+        .attr("transform", "translate("+to_pos[0]+","+to_pos[1]+")")
+        .ease(d3.easeLinear)
+        .duration(Math.random()*500+1000)
+        .delay(100)
+        .on("start", function repeat() {
+            // console.log(angle)
+            d3.active(this)
+                .attr("transform", "translate("+from_pos[0]+","+from_pos[1]+"),rotate("+angle+")")
+                .duration(0)
+                .transition()
+                .attr("transform", "translate("+to_pos[0]+","+to_pos[1]+"),rotate("+angle+")")
+                .duration(Math.random()*500+1000)
+                .transition()
+                .delay(200)
+                .on("start", repeat);
+          });
     // draw the path of flight line
     map.append('path')
         .classed('airline', true)
@@ -142,47 +232,20 @@ create_airline=(from_pos, to_pos, from_name, to_name, properties)=>{
         })
         .attr('stroke-width', '1')
         .attr('fill', 'none')
-        .attr('d', from_str+mid_str+to_str);
-
-    // draw the flight animation 
-    flight = map.append("circle")
-        .classed('airline', true)
-        .classed('from_'+repSpace(from_name), true)
-        .classed('to_'+repSpace(to_name), true)
-        .classed('airspace_'+repSpace(properties.airspace), true)
-        .classed('aircraft_'+repSpace(properties.aircraft), true)
-        .classed('engine_'+repSpace(properties.engine), true)
-        .attr('r',3)
-        .attr('stroke-width', 1)
-        .attr("stroke", aircraft_list.get(properties.aircraft))
-        .attr('fill', engine_list.get(properties.engine))
-        .attr("transform", "translate("+from_pos[0]+","+from_pos[1]+")")
-        .transition()
-        .attr("transform", "translate("+to_pos[0]+","+to_pos[1]+")")
-        .ease(d3.easeLinear)
-        .duration(Math.random()*500+1000)
-        .delay(100)
-        .on("start", function repeat() {
-            d3.active(this)
-                .attr("transform", "translate("+from_pos[0]+","+from_pos[1]+")")
-                .duration(0)
-                .transition()
-                .attr("transform", "translate("+to_pos[0]+","+to_pos[1]+")")
-                .duration(Math.random()*500+1000)
-                .transition()
-                .delay(200)
-                .on("start", repeat);
-          });
+        .attr('d', from_str+mid_str+to_str)
+        .attr("marker-mid",()=>{
+            return "url(#"+arr_id+")"
+        });
 
 }
 
 list_attr_meta=()=>{
-    box = svg.append("g").attr("class","label")
-    y = 15
-    x = 5
-    k = 20
+    var box = svg.append("g").attr("class","label")
+    var y = 15
+    var x = 5
+    var k = 20
 
-    airspace_g = box.append("g")
+    var airspace_g = box.append("g")
     airspace_g.append('text')
     .attr("fill", "#DDD")
     .attr("transform", "translate(" + (x)+"," +y+ ")")
