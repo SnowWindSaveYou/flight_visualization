@@ -313,6 +313,33 @@ list_attr_meta=()=>{
         .text(engine);
         y+=k
     })
+
+    y = 600
+    price_g = box.append("g")
+    price_g.append('text')
+    .attr("fill", "#DDD")
+    .attr("transform", "translate(" + (x)+"," +y+ ")")
+    .attr("dy", ".35em")
+    .text("Price:");
+    y+=k
+    var i = 0
+    for(var i = 0;i<=250;i+=10){
+        price_g.append('path')
+        .attr('stroke', toRGB(i) )
+        .attr('stroke-width', 2)
+        .attr('fill', 'none')
+        .attr('d', "M"+x +" "+y+"L"+x+" "+(y+10 ));
+        
+        if(i%50==0){
+            price_g.append('text')
+            .attr("font-size", 9)
+            .attr("fill", "#DDD")
+            .attr("transform", "translate(" + (x)+"," +(y+10)+ ")")
+            .attr("dy", ".35em")
+            .text(i);  
+        }
+        x+=10
+    }
 }
 
 
