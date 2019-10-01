@@ -149,27 +149,35 @@ getAngle= (x1,y1,x2,y2)=>{
     else {return  -angle}
 };
 
-create_airline=(layer,from_pos, to_pos, from_name, to_name, properties)=>{
+ getVer = (x1,y1,x2,y2,positive)=>{
+    var dx = x2-x1
+    var dy = y2-y1
+    var mx = (x1+x2)/2
+    var my = (y1+y2)/2
+    var b = my + (dx/dy)*mx
+    var dist = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2))
+    if(dist<50)dist = 50
+    var rx = 0
+    if(positive){
+        rx = mx + Math.ceil((dist+500)/(dist))
+    }else{
+        rx = mx - Math.ceil((dist+500)/(dist))
+    }
+    var ry = -(dx/dy)*rx +b
+    return [rx,ry,dist]
+}
+
+ create_airline=(layer,from_pos, to_pos, from_name, to_name, properties)=>{
     var priceRGB = toRGB(properties.price)
     var arr_id = "arr_from_"+repSpace(from_name)+'_to_'+repSpace(to_name);
     arrowMarker(map,arr_id, priceRGB,priceRGB,20)
-    var from_str = 'M'+from_pos[0]+' '+from_pos[1]
-    // to_str = ' '+to_pos[0]+' '+to_pos[1]
-    // r = Math.ceil(Math.random()*5)+5;  
-    var dist = Math.sqrt(Math.pow(from_pos[0]-to_pos[0],2)+Math.pow(from_pos[1]-to_pos[1],2))
-    var r = Math.ceil(dist/(Math.ceil(Math.random()*30)+30))
-    var mid_pos = [(from_pos[0]+to_pos[0])/2,(from_pos[1]+to_pos[1])/2 ]
+    // var mid_pos = [(from_pos[0]+to_pos[0])/2,(from_pos[1]+to_pos[1])/2 ]
     var angle = getAngle(from_pos[0],from_pos[1],to_pos[0],to_pos[1])
-    if(angle<0){
-        r = -r
-    }
-    // mid_str = 'Q'+mid_pos[0]+' '+mid_pos[1].
+    var vertex = getVer(from_pos[0],from_pos[1],to_pos[0],to_pos[1],angle>0)
+    var dist = vertex[2]
+    var from_str = 'M'+from_pos[0]+' '+from_pos[1]
+    var mid_str = 'Q'+(vertex[0])+' '+(vertex[1])
     var to_str = ' '+to_pos[0]+' '+to_pos[1]
-    var mid_str = 'Q'+(mid_pos[0]+r)+' '+(mid_pos[1]-r)
-
-    // var mid_angle = getAngle(from_pos[0],from_pos[1],mid_pos[0],mid_pos[1])
-    // var end_angle = getAngle(mid_pos[0],mid_pos[1],to_pos[0],to_pos[1])
-
     // draw the flight animation 
     flight = layer
         // .append("circle")
@@ -196,8 +204,8 @@ create_airline=(layer,from_pos, to_pos, from_name, to_name, properties)=>{
                 .attr("transform", "translate("+from_pos[0]+","+from_pos[1]+"),rotate("+angle+")")
                 .duration(0)
                 .transition()
-                .attr("transform", "translate("+((mid_pos[0])+(r/2))+","+((mid_pos[1])-(r/2))+"),rotate("+angle+")")
-                .duration(dist*5)
+                .attr("transform", "translate("+vertex[0]+","+vertex[1]+"),rotate("+angle+")")
+                .duration(dist*10)
                 .transition()
                 .attr("transform", "translate("+to_pos[0]+","+to_pos[1]+"),rotate("+angle+")")
                 .duration(dist*10)
@@ -264,7 +272,7 @@ list_attr_meta=()=>{
     y+=k
     aircraft_list.forEach((colorid,aircraft)=>{
         aircraft_g.append('circle')
-        .attr('r', 3)
+        .attr('r', 4.5)
         .attr('stroke-width', 2)
         .attr('stroke', colorid)
         .attr('fill', "none")
@@ -284,7 +292,7 @@ list_attr_meta=()=>{
     .attr("fill", "#DDD")
     .attr("transform", "translate(" + (x)+"," +y+ ")")
     .attr("dy", ".35em")
-    .text("Engine Model:");
+    .text("Engine Models:");
     y+=k
     engine_list.forEach((colorid,engine)=>{
         aircraft_g.append('circle')
@@ -307,7 +315,8 @@ list_attr_meta=()=>{
     .attr("transform", "translate(" + (x)+"," +y+ ")")
     .attr("dy", ".35em")
     .text("Price:");
-    y+=k
+    y+=10
+    x+=5
     var i = 0
     for(var i = 0;i<=250;i+=10){
         price_g.append('path')
@@ -333,14 +342,17 @@ list_attr_meta=()=>{
 Promise.all([load_citeis(),load_lines(),load_map()]).then(()=>{
     console.log("data load complited")
     var city_color = color(strongcolor)
+
     // draw air lines
     lines_sum.forEach((tocity,city)=>{
         var from_pos = projection([cities_pos.get(city)[0],cities_pos.get(city)[1]])
         var mycolor = city_color(Math.ceil(Math.random()*strongcolor.length))+"AA"
+        var alph = 33
+        if(tocity.size<=2){alph="ff"}
         // crate city node
         map.append("circle")
         .attr("r",tocity.size*5)
-        .attr("stroke","#ffffffaa")
+        .attr("stroke","#ffffff"+alph)
         .attr("fill", mycolor)
         .attr("class",(d)=>{
             return "node_"+repSpace(city)
@@ -359,12 +371,12 @@ Promise.all([load_citeis(),load_lines(),load_map()]).then(()=>{
 
         // insert city selection check boxes
         $("#from_city_list").append(
-            "<li><label class= 'cblabel'  style='background:"+mycolor +"'><input class='from_city_checkbox' id='from_"+city+"_checkbox' type='checkbox'  checked='true' value='from_"+city+"' name='city'/>"
+            "<li><label class= 'cblabel'  style='background:"+mycolor +"'><input class='from_city_checkbox' id='from_"+repSpace(city)+"_checkbox' type='checkbox'  checked='true' value='from_"+repSpace(city)+"' name='city'/>"
             +city
             +"</label></li>"
         );
         $("#to_city_list").append(
-            "<li><label class='cblabel' style='background:"+mycolor +"'><input class='to_city_checkbox' id='to_"+city+"_checkbox' type='checkbox' value='to_"+city+"' name='city'/>"
+            "<li><label class='cblabel' style='background:"+mycolor +"'><input class='to_city_checkbox' id='to_"+repSpace(city)+"_checkbox' type='checkbox' value='to_"+repSpace(city)+"' name='city'/>"
             +city
             +"</label></li>"
         );
