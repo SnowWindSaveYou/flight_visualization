@@ -157,21 +157,19 @@ getAngle= (x1,y1,x2,y2)=>{
 create_airline=(from_pos, to_pos, from_name, to_name, properties)=>{
     
     var arr_id = "arr_from_"+repSpace(from_name)+'_to_'+repSpace(to_name);
-    arrowMarker(map,
-        arr_id,
-        engine_list.get(properties.engine),
-        aircraft_list.get(properties.aircraft))
+    arrowMarker(map,arr_id, engine_list.get(properties.engine),aircraft_list.get(properties.aircraft))
     var from_str = 'M'+from_pos[0]+' '+from_pos[1]
     // to_str = ' '+to_pos[0]+' '+to_pos[1]
     // r = Math.ceil(Math.random()*5)+5;  
-    var r = Math.ceil(Math.sqrt(Math.pow(from_pos[0]-to_pos[0],2)+Math.pow(from_pos[1]-to_pos[1],2))/(Math.ceil(Math.random()*50)+5))
-    var mid_pos = [(((from_pos[0]+to_pos[0])/2) +r),(((from_pos[1]+to_pos[1])/2 )-r)]
+    var dist = Math.sqrt(Math.pow(from_pos[0]-to_pos[0],2)+Math.pow(from_pos[1]-to_pos[1],2))
+    var r = Math.ceil(dist/(Math.ceil(Math.random()*30)+20))
+    var mid_pos = [(from_pos[0]+to_pos[0])/2,(from_pos[1]+to_pos[1])/2 ]
     // mid_str = 'Q'+mid_pos[0]+' '+mid_pos[1].
     var to_str = ' '+to_pos[0]+' '+to_pos[1]
-    var mid_str = 'Q'+mid_pos[0]+' '+mid_pos[1]
+    var mid_str = 'Q'+(mid_pos[0]+r)+' '+(mid_pos[1]-r)
     var angle = getAngle(from_pos[0],from_pos[1],to_pos[0],to_pos[1])
-
-    console.log(arr_id+": "+angle)
+    // var mid_angle = getAngle(from_pos[0],from_pos[1],mid_pos[0],mid_pos[1])
+    // var end_angle = getAngle(mid_pos[0],mid_pos[1],to_pos[0],to_pos[1])
 
     // draw the flight animation 
     flight = map
@@ -195,13 +193,15 @@ create_airline=(from_pos, to_pos, from_name, to_name, properties)=>{
         .duration(Math.random()*500+1000)
         .delay(100)
         .on("start", function repeat() {
-            // console.log(angle)
             d3.active(this)
                 .attr("transform", "translate("+from_pos[0]+","+from_pos[1]+"),rotate("+angle+")")
                 .duration(0)
                 .transition()
+                .attr("transform", "translate("+((mid_pos[0])+(r/2))+","+((mid_pos[1])-(r/2))+"),rotate("+angle+")")
+                .duration(dist*5)
+                .transition()
                 .attr("transform", "translate("+to_pos[0]+","+to_pos[1]+"),rotate("+angle+")")
-                .duration(Math.random()*500+1000)
+                .duration(dist*10)
                 .transition()
                 .delay(200)
                 .on("start", repeat);
