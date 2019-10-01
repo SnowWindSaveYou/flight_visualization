@@ -146,23 +146,13 @@ load_map = () => d3.json("./flight_visual/data/aust.json").then( function (json)
         });
 });
 
-getAngle= (x1,x2,y1,y2)=>{
-    dx = y1-x1
-    dy = y2-x2
-    angle = Math.abs(Math.atan2(dy,dx)*90/Math.PI)
-    if(dx>=0& dy>=0){
-        // console.log("q1 "+dx+","+dy)
-        return angle}
-    else if (dx>=0& dy<=0) { 
-        // console.log("q2 "+dx+","+dy) 
-        return 360 - angle} 
-    else if (dx<=0& dy<=0) { 
-        console.log("q3 "+dx+","+dy+", "+angle) 
-        return 180 + angle} 
-    else {
-        // console.log("q4 "+dx+","+dy+", "+angle) 
-        return 180 - angle}
-}
+getAngle= (x1,y1,x2,y2)=>{
+    var dx = x2-x1
+    var dy = y2-y1
+    var angle = Math.abs(Math.atan2(dy,dx)*180/Math.PI)
+    if(y2>=y1){return angle} 
+    else {return  -angle}
+};
 
 create_airline=(from_pos, to_pos, from_name, to_name, properties)=>{
     
@@ -174,9 +164,9 @@ create_airline=(from_pos, to_pos, from_name, to_name, properties)=>{
     var from_str = 'M'+from_pos[0]+' '+from_pos[1]
     // to_str = ' '+to_pos[0]+' '+to_pos[1]
     // r = Math.ceil(Math.random()*5)+5;  
-    var r = Math.ceil(Math.sqrt(Math.pow(from_pos[0]-to_pos[0],2)+Math.pow(from_pos[1]-to_pos[1],2))/(Math.ceil(Math.random()*25)+20))
+    var r = Math.ceil(Math.sqrt(Math.pow(from_pos[0]-to_pos[0],2)+Math.pow(from_pos[1]-to_pos[1],2))/(Math.ceil(Math.random()*50)+5))
     var mid_pos = [(((from_pos[0]+to_pos[0])/2) +r),(((from_pos[1]+to_pos[1])/2 )-r)]
-    // mid_str = 'Q'+mid_pos[0]+' '+mid_pos[1]
+    // mid_str = 'Q'+mid_pos[0]+' '+mid_pos[1].
     var to_str = ' '+to_pos[0]+' '+to_pos[1]
     var mid_str = 'Q'+mid_pos[0]+' '+mid_pos[1]
     var angle = getAngle(from_pos[0],from_pos[1],to_pos[0],to_pos[1])
@@ -184,38 +174,38 @@ create_airline=(from_pos, to_pos, from_name, to_name, properties)=>{
     console.log(arr_id+": "+angle)
 
     // draw the flight animation 
-    // flight = map
-    //     // .append("circle")
-    //     .append("path")
-    //     .attr("d","M2,-4 L10,0 L2,4 L6,0 L2,-4")
-    //     .classed('airline', true)
-    //     .classed('from_'+repSpace(from_name), true)
-    //     .classed('to_'+repSpace(to_name), true)
-    //     .classed('airspace_'+repSpace(properties.airspace), true)
-    //     .classed('aircraft_'+repSpace(properties.aircraft), true)
-    //     .classed('engine_'+repSpace(properties.engine), true)
-    //     .attr('r',3)
-    //     .attr('stroke-width', 1)
-    //     .attr("stroke", aircraft_list.get(properties.aircraft))
-    //     .attr('fill', engine_list.get(properties.engine))
-    //     .attr("transform", "translate("+from_pos[0]+","+from_pos[1]+"),rotate("+angle+")")
-    //     .transition()
-    //     .attr("transform", "translate("+to_pos[0]+","+to_pos[1]+")")
-    //     .ease(d3.easeLinear)
-    //     .duration(Math.random()*500+1000)
-    //     .delay(100)
-    //     .on("start", function repeat() {
-    //         // console.log(angle)
-    //         d3.active(this)
-    //             .attr("transform", "translate("+from_pos[0]+","+from_pos[1]+"),rotate("+angle+")")
-    //             .duration(0)
-    //             .transition()
-    //             .attr("transform", "translate("+to_pos[0]+","+to_pos[1]+"),rotate("+angle+")")
-    //             .duration(Math.random()*500+1000)
-    //             .transition()
-    //             .delay(200)
-    //             .on("start", repeat);
-    //       });
+    flight = map
+        // .append("circle")
+        .append("path")
+        .attr("d","M2,-4 L10,0 L2,4 L6,0 L2,-4")
+        .classed('airline', true)
+        .classed('from_'+repSpace(from_name), true)
+        .classed('to_'+repSpace(to_name), true)
+        .classed('airspace_'+repSpace(properties.airspace), true)
+        .classed('aircraft_'+repSpace(properties.aircraft), true)
+        .classed('engine_'+repSpace(properties.engine), true)
+        .attr('r',3)
+        .attr('stroke-width', 1)
+        .attr("stroke", aircraft_list.get(properties.aircraft))
+        .attr('fill', engine_list.get(properties.engine))
+        .attr("transform", "translate("+from_pos[0]+","+from_pos[1]+"),rotate("+angle+")")
+        .transition()
+        .attr("transform", "translate("+to_pos[0]+","+to_pos[1]+")")
+        .ease(d3.easeLinear)
+        .duration(Math.random()*500+1000)
+        .delay(100)
+        .on("start", function repeat() {
+            // console.log(angle)
+            d3.active(this)
+                .attr("transform", "translate("+from_pos[0]+","+from_pos[1]+"),rotate("+angle+")")
+                .duration(0)
+                .transition()
+                .attr("transform", "translate("+to_pos[0]+","+to_pos[1]+"),rotate("+angle+")")
+                .duration(Math.random()*500+1000)
+                .transition()
+                .delay(200)
+                .on("start", repeat);
+          });
     // draw the path of flight line
 
     map.append('path')
