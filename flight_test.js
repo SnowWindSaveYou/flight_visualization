@@ -19,6 +19,7 @@ stroke_style={"A":"30 2","B":"10,5,2,2,2,5","C":"4 8 4 4 8","D":"2 4","E":"1 5 1
 
 softcolor = ["#aac8d0","#46fffb","#c9bbc8","#e7c1ce","#f4dcd0","#c9f1cb"]
 strongcolor = ['#9fffa9', "#c1d5e7",'#f74964', '#fbd248', '#fd614b', '#c1afff', '#4db5ae', '#a02b3d', '#ccd56a', '#ee4264']
+bluecolor = ["#ff00d1","#b700ff","#7000ff","#0005fa","#009eff","#00e5ff","#14bdc7","#9f99f4"]
 var color =(colorset)=> d3.scaleOrdinal().range(colorset);
 
 // int value to rgb 
@@ -156,15 +157,25 @@ getAngle= (x1,y1,x2,y2)=>{
     var my = (y1+y2)/2
     var b = my + (dx/dy)*mx
     var dist = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2))
-    if(dist<50)dist = 50
-    var rx = 0
+    if(dist<50){dist = 50}
+    else if(dist>200){dist = 200}
+    var rx,cx = 0
+    var r = Math.ceil((Math.random()*100+500)/(dist))
+
+    var angle = Math.atan(-dx/dy)
+    r = Math.cos(angle)*r
+    var rx,cx = 0
     if(positive){
-        rx = mx + Math.ceil((dist+500)/(dist))
+        rx = mx + r
+        cx = mx + (r/2)
     }else{
-        rx = mx - Math.ceil((dist+500)/(dist))
+        rx = mx - r
+        cx = mx - (r/2)
     }
+
     var ry = -(dx/dy)*rx +b
-    return [rx,ry,dist]
+    var cy = -(dx/dy)*cx +b
+    return [rx,ry,cx,cy,dist]
 }
 
  create_airline=(layer,from_pos, to_pos, from_name, to_name, properties)=>{
@@ -174,7 +185,7 @@ getAngle= (x1,y1,x2,y2)=>{
     // var mid_pos = [(from_pos[0]+to_pos[0])/2,(from_pos[1]+to_pos[1])/2 ]
     var angle = getAngle(from_pos[0],from_pos[1],to_pos[0],to_pos[1])
     var vertex = getVer(from_pos[0],from_pos[1],to_pos[0],to_pos[1],angle>0)
-    var dist = vertex[2]
+    var dist = vertex[4]
     var from_str = 'M'+from_pos[0]+' '+from_pos[1]
     var mid_str = 'Q'+(vertex[0])+' '+(vertex[1])
     var to_str = ' '+to_pos[0]+' '+to_pos[1]
@@ -204,7 +215,7 @@ getAngle= (x1,y1,x2,y2)=>{
                 .attr("transform", "translate("+from_pos[0]+","+from_pos[1]+"),rotate("+angle+")")
                 .duration(0)
                 .transition()
-                .attr("transform", "translate("+vertex[0]+","+vertex[1]+"),rotate("+angle+")")
+                .attr("transform", "translate("+vertex[2]+","+vertex[3]+"),rotate("+angle+")")
                 .duration(dist*10)
                 .transition()
                 .attr("transform", "translate("+to_pos[0]+","+to_pos[1]+"),rotate("+angle+")")
