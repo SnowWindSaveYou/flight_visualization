@@ -53,11 +53,11 @@
         <!-- <div class="force-directed" width="960" height="600"> -->
         <div id="aust_map" ></div>
         <div style="float:left; width:150px;height:700px; background:#ccc;color:#fff">
-            <div style="width:max-content">
+            <div style="width:100%;">
                 <div> - From City<button style="float:right" onclick="cancelFrom()">X</button></div>
                 <ul id="from_city_list" style="float:right"> </ul>
             </div>
-            <div style="width:max-content">
+            <div style="width:100%;">
                 <div> - To City<button  style="float:right"  onclick="cancelTo()">X</button></div>
                 <ul id="to_city_list" style="float:right"> </ul>
             </div>
