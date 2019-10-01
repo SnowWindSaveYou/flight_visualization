@@ -62,23 +62,18 @@ var svg = d3.select("#aust_map")
 var map = svg.append("g")
 
 
-var arrowMarker = (layout,id,fill,stroke)=>{
+var arrowMarker = (layout,id,fill,stroke,refx)=>{
     arrow = layout.append("marker")
     .attr("id",id)
     .attr("markerUnits","strokeWidth")
     .attr("markerWidth","12")
     .attr("markerHeight","12")
     .attr("viewBox","0 0 12 12") 
-    .attr("refX","6")
+    .attr("refX",refx)
     .attr("refY","6")
-    .attr("orient","auto");
-    x = 5
+    .attr("orient","auto"); 
     // var arrow_path = "M2,2 L10,6 L2,10 L6,6 L2,2";
-    var arrow_path = "M"+x+","+x+
-                    " L"+(8+x)+",6"+
-                    " L"+x+",10"+
-                    " L"+(x+4)+",6"+
-                    " L"+x+","+x
+    var arrow_path = "M2,4 L10,6 L2,8 L6,6 L2,4";
     arrow.append("path")
         .attr("d",arrow_path)
         .attr('stroke-width', 0.7)
@@ -154,25 +149,29 @@ getAngle= (x1,y1,x2,y2)=>{
     else {return  -angle}
 };
 
-create_airline=(from_pos, to_pos, from_name, to_name, properties)=>{
-    
+create_airline=(layer,from_pos, to_pos, from_name, to_name, properties)=>{
+    var priceRGB = toRGB(properties.price)
     var arr_id = "arr_from_"+repSpace(from_name)+'_to_'+repSpace(to_name);
-    arrowMarker(map,arr_id, engine_list.get(properties.engine),aircraft_list.get(properties.aircraft))
+    arrowMarker(map,arr_id, priceRGB,priceRGB,20)
     var from_str = 'M'+from_pos[0]+' '+from_pos[1]
     // to_str = ' '+to_pos[0]+' '+to_pos[1]
     // r = Math.ceil(Math.random()*5)+5;  
     var dist = Math.sqrt(Math.pow(from_pos[0]-to_pos[0],2)+Math.pow(from_pos[1]-to_pos[1],2))
-    var r = Math.ceil(dist/(Math.ceil(Math.random()*30)+20))
+    var r = Math.ceil(dist/(Math.ceil(Math.random()*30)+30))
     var mid_pos = [(from_pos[0]+to_pos[0])/2,(from_pos[1]+to_pos[1])/2 ]
+    var angle = getAngle(from_pos[0],from_pos[1],to_pos[0],to_pos[1])
+    if(angle<0){
+        r = -r
+    }
     // mid_str = 'Q'+mid_pos[0]+' '+mid_pos[1].
     var to_str = ' '+to_pos[0]+' '+to_pos[1]
     var mid_str = 'Q'+(mid_pos[0]+r)+' '+(mid_pos[1]-r)
-    var angle = getAngle(from_pos[0],from_pos[1],to_pos[0],to_pos[1])
+
     // var mid_angle = getAngle(from_pos[0],from_pos[1],mid_pos[0],mid_pos[1])
     // var end_angle = getAngle(mid_pos[0],mid_pos[1],to_pos[0],to_pos[1])
 
     // draw the flight animation 
-    flight = map
+    flight = layer
         // .append("circle")
         .append("path")
         .attr("d","M2,-4 L10,0 L2,4 L6,0 L2,-4")
@@ -208,7 +207,7 @@ create_airline=(from_pos, to_pos, from_name, to_name, properties)=>{
           });
     // draw the path of flight line
 
-    map.append('path')
+    layer.append('path')
         .classed('airline', true)
         .classed('from_'+repSpace(from_name), true)
         .classed('to_'+repSpace(to_name), true)
@@ -216,13 +215,11 @@ create_airline=(from_pos, to_pos, from_name, to_name, properties)=>{
         .classed('aircraft_'+repSpace(properties.aircraft), true)
         .classed('engine_'+repSpace(properties.engine), true)
         .attr('stroke-dasharray', stroke_style[properties.airspace])
-        .attr('stroke', ()=>{
-            return toRGB(properties.price)
-        })
+        .attr('stroke', priceRGB)
         .attr('stroke-width', 1)
         .attr('fill', 'none')
         .attr('d', from_str+mid_str+to_str)
-        .attr("marker-mid",()=>{
+        .attr("marker-end",()=>{
             return "url(#"+arr_id+")"
         });
 
@@ -387,10 +384,11 @@ Promise.all([load_citeis(),load_lines(),load_map()]).then(()=>{
             return city;
         });
 
+        var airlinegraph = map.append('g')
         tocity.forEach((attr,name)=>{
             var to_pos = projection([cities_pos.get(name)[0], cities_pos.get(name)[1]])
             // create airline
-            create_airline(from_pos,to_pos,city,name,attr)
+            create_airline(airlinegraph,from_pos,to_pos,city,name,attr)
         })
 
         
